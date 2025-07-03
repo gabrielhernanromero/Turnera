@@ -73,8 +73,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-
-const apiUrl = 'https://6861b32096f0cc4e34b743f2.mockapi.io/api/v1/turnos';
+import { getTurnos, createTurno, updateTurno, deleteTurno } from '../services/turnosService.js'
 
 const turnos = ref([]);
 const loading = ref(true);
@@ -90,19 +89,15 @@ const turnoActual = ref({
 
 const obtenerTurnos = async () => {
   loading.value = true;
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    turnos.value = data;
-  } catch (error) {
-    console.error('Falló la obtención de turnos:', error);
-    turnos.value = []; 
-  } finally {
-    loading.value = false;
-  }
+try {
+  const response = await getTurnos();
+  turnos.value = response.data;
+} catch (error) {
+  console.error('Falló la obtención de turnos:', error);
+  turnos.value = [];
+} finally {
+  loading.value = false;
+}
 };
 
 onMounted(obtenerTurnos);
@@ -117,44 +112,37 @@ const handleSubmit = async () => {
 
 const crearTurno = async () => {
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(turnoActual.value)
-    });
-    if (!response.ok) throw new Error('Error al crear el turno');
-    await obtenerTurnos();
-    resetearFormulario();
-  } catch (error) {
-    console.error(error);
-  }
+  await createTurno(turnoActual.value, {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  await obtenerTurnos();
+  resetearFormulario();
+} catch (error) {
+  console.error('Error al crear el turno:', error);
+}
 };
 
 const actualizarTurno = async () => {
   try {
-    const response = await fetch(`${apiUrl}/${turnoActual.value.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(turnoActual.value)
-    });
-    if (!response.ok) throw new Error('Error al actualizar');
-    await obtenerTurnos();
-    cancelarEdicion();
-  } catch (error) {
-    console.error(error);
-  }
+  await updateTurno(turnoActual.value.id, turnoActual.value, {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  await obtenerTurnos();
+  cancelarEdicion();
+} catch (error) {
+  console.error('Error al actualizar:', error);
+}
 };
 
 const eliminarTurno = async (id) => {
-  if (confirm('¿Estás seguro de que quieres eliminar este turno?')) {
-    try {
-      const response = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Error al eliminar');
-      await obtenerTurnos();
-    } catch (error) {
-      console.error(error);
-    }
+ if (confirm('¿Estás seguro de que quieres eliminar este turno?')) {
+  try {
+    await deleteTurno(id);
+    await obtenerTurnos();
+  } catch (error) {
+    console.error('Error al eliminar:', error);
   }
+}
 };
 
 const iniciarEdicion = (turno) => {
