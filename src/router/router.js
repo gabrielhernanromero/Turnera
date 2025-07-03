@@ -1,9 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import PostForm from '../components/PostForm.vue';
-import PostList from '../views/PostList.vue';
+import AdminView from '../views/AdminView.vue'
 
 const routes = [
-
+   {
+    path: '/admin',
+    name: 'admin',
+    component: AdminView
+  }
 ];
 
 const router = createRouter({
